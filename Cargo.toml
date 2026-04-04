@@ -1,0 +1,13 @@
+[package]
+name = "genixos"
+version = "0.1.0"
+edition = "2024"
+authors =  ["GenchoXD <emagjby@gmail.com>"]
+
+[dependencies]
+bootloader = { version = "0.9", features = ["map_physical_memory"] }
+
+[[bin]]
+name = "genixos"
+test = false
+bench = false
