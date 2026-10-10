@@ -9,12 +9,12 @@ static HELLO: &[u8] = b"Hello World!";
 pub extern "C" fn _start() -> ! {
     // This is our entry point, beacuse the linker
     // loads a function called _start by default
-    let vga_buffer = 0xb8000 as *mut u8;
+    let vga_buffer = 0xb8000 as *mut u8; // pointer to the VGA text buffer
 
     for (i, &byte) in HELLO.iter().enumerate() {
         unsafe {
-            *vga_buffer.offset(i as isize * 2) = byte;
-            *vga_buffer.offset(i as isize * 2 + 1) = 0xb;
+            *vga_buffer.offset(i as isize * 2) = byte; // write the byte to the VGA buffer
+            *vga_buffer.offset(i as isize * 2 + 1) = 0xF; // set the color to white on black
         }
     }
 
