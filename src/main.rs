@@ -10,7 +10,13 @@ pub extern "C" fn _start() -> ! {
     // This is our entry point, beacuse the linker
     // loads a function called _start by default
 
-    vga::write_startup_message();
+    let mut writer = vga::VgaWriter::new();
+
+    writer.write_startup_message();
+    writer.write("Welcome!\n");
+    for i in 0..23 {
+        writer.write("Welcome!\n");
+    }
 
     loop {}
 }
