@@ -160,6 +160,13 @@ impl VgaWriter {
     }
 }
 
+impl core::fmt::Write for VgaWriter {
+    fn write_str(&mut self, s: &str) -> core::fmt::Result {
+        self.write(s);
+        Ok(())
+    }
+}
+
 fn char_to_u8(input: char) -> u8 {
     match input {
         ' '..='~' => input as u8,

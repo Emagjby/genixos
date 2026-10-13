@@ -1,8 +1,10 @@
 #![no_std] // don't link the rust standard library
 #![no_main] // disable Rust-level entry points
 
-mod vga;
+mod console;
+mod sync;
 
+use console::vga;
 use core::panic::PanicInfo;
 
 #[unsafe(no_mangle)] // don't mangle the name of this function as it needs to stay as _start
