@@ -10,6 +10,7 @@ use core::panic::PanicInfo;
 pub extern "C" fn _start() -> ! {
     // This is our entry point, beacuse the linker
     // loads a function called _start by default
+    println!("Loading GenixOS...");
 
     loop {}
 }
