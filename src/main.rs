@@ -13,6 +13,7 @@ pub extern "C" fn _start() -> ! {
     let mut writer = vga::VgaWriter::new();
 
     writer.write_startup_message();
+    writer.write("това е тест");
 
     loop {}
 }

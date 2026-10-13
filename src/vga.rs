@@ -21,8 +21,8 @@ impl VgaWriter {
     }
 
     pub fn write(&mut self, input: &str) {
-        for byte in input.bytes() {
-            Self::write_byte(self, byte);
+        for byte in input.chars() {
+            Self::write_byte(self, char_to_u8(byte));
         }
     }
 
@@ -30,12 +30,15 @@ impl VgaWriter {
         Self::write(self, STARTUP_MESSAGE);
     }
 
-    fn write_byte(&mut self, byte: u8) {
-        if byte == b'\n' {
-            self.newline();
-            return;
+    pub fn write_byte(&mut self, byte: u8) {
+        match byte {
+            b'\n' => self.newline(),
+            0x20..=0x7E => self.write_to_buffer(byte),
+            _ => self.write_to_buffer(b'?'),
         }
+    }
 
+    fn write_to_buffer(&mut self, byte: u8) {
         let pos = self.get_pos();
 
         unsafe {
@@ -86,5 +89,13 @@ impl VgaWriter {
         if self.row >= VGA_HEIGHT {
             self.scroll();
         }
+    }
+}
+
+fn char_to_u8(input: char) -> u8 {
+    match input {
+        ' '..='~' => input as u8,
+        '\n' => b'\n',
+        _ => b'?',
     }
 }
