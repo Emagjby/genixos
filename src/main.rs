@@ -13,7 +13,8 @@ pub extern "C" fn _start() -> ! {
     let mut writer = vga::VgaWriter::new();
 
     writer.write_startup_message();
-    writer.write("това е тест");
+    writer.set_color(vga::VgaColor::Red, vga::VgaColor::Black);
+    writer.write_startup_message();
 
     loop {}
 }
