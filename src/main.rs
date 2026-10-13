@@ -1,7 +1,8 @@
 #![no_std] // don't link the rust standard library
 #![no_main] // disable Rust-level entry points
 
-mod vga;
+mod console;
+mod sync;
 
 use core::panic::PanicInfo;
 
@@ -9,8 +10,7 @@ use core::panic::PanicInfo;
 pub extern "C" fn _start() -> ! {
     // This is our entry point, beacuse the linker
     // loads a function called _start by default
-
-    vga::write_startup_message();
+    println!("Loading GenixOS...");
 
     loop {}
 }
