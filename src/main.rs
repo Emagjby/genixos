@@ -13,10 +13,6 @@ pub extern "C" fn _start() -> ! {
     let mut writer = vga::VgaWriter::new();
 
     writer.write_startup_message();
-    writer.write("Welcome!\n");
-    for i in 0..23 {
-        writer.write("Welcome!\n");
-    }
 
     loop {}
 }

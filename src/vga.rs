@@ -2,6 +2,8 @@ static STARTUP_MESSAGE: &str = "Loading GenixOS...\n";
 
 const VGA_WIDTH: usize = 80;
 const VGA_HEIGHT: usize = 25;
+const BYTES_PER_ROW: usize = VGA_WIDTH * 2;
+const LAST_ROW_BYTE_OFFSET: usize = (VGA_HEIGHT - 1) * BYTES_PER_ROW;
 
 pub struct VgaWriter {
     column: usize,
@@ -37,15 +39,15 @@ impl VgaWriter {
         let pos = self.get_pos();
 
         unsafe {
-            *self.buffer.offset(pos * 2) = byte;
-            *self.buffer.offset(pos * 2 + 1) = 0xF;
+            core::ptr::write_volatile(self.buffer.add(pos * 2), byte);
+            core::ptr::write_volatile(self.buffer.add(pos * 2 + 1), 0xF);
         }
 
         self.iterate_pos();
     }
 
-    fn get_pos(&self) -> isize {
-        (self.column + self.row * VGA_WIDTH) as isize
+    fn get_pos(&self) -> usize {
+        self.column + self.row * VGA_WIDTH
     }
 
     fn iterate_pos(&mut self) {
@@ -57,18 +59,19 @@ impl VgaWriter {
     }
 
     fn scroll(&mut self) {
-        unsafe {
-            core::ptr::copy(
-                self.buffer.add(VGA_WIDTH * 2),
-                self.buffer,
-                (VGA_HEIGHT - 1) * VGA_WIDTH * 2,
-            );
+        for i in 0..LAST_ROW_BYTE_OFFSET {
+            unsafe {
+                core::ptr::write_volatile(
+                    self.buffer.add(i),
+                    core::ptr::read_volatile(self.buffer.add(VGA_WIDTH * 2 + i)),
+                );
+            }
         }
 
-        for i in ((VGA_HEIGHT - 1) * VGA_WIDTH)..(VGA_HEIGHT * VGA_WIDTH) {
+        for i in 0..VGA_WIDTH {
             unsafe {
-                *self.buffer.offset(i as isize * 2) = b' ';
-                *self.buffer.offset(i as isize * 2 + 1) = 0xF;
+                core::ptr::write_volatile(self.buffer.add(LAST_ROW_BYTE_OFFSET + i * 2), 0x20);
+                core::ptr::write_volatile(self.buffer.add(LAST_ROW_BYTE_OFFSET + i * 2 + 1), 0xF);
             }
         }
 
