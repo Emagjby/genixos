@@ -4,19 +4,12 @@
 mod console;
 mod sync;
 
-use console::vga;
 use core::panic::PanicInfo;
 
 #[unsafe(no_mangle)] // don't mangle the name of this function as it needs to stay as _start
 pub extern "C" fn _start() -> ! {
     // This is our entry point, beacuse the linker
     // loads a function called _start by default
-
-    let mut writer = vga::VgaWriter::new();
-
-    writer.write_startup_message();
-    writer.set_color(vga::VgaColor::Red, vga::VgaColor::Black);
-    writer.write_startup_message();
 
     loop {}
 }

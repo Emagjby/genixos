@@ -1,5 +1,4 @@
-static STARTUP_MESSAGE: &str = "Loading GenixOS...\n";
-
+const VGA_BUFFER: *mut u8 = 0xb8000 as *mut u8;
 const VGA_WIDTH: usize = 80;
 const VGA_HEIGHT: usize = 25;
 const BYTES_PER_ROW: usize = VGA_WIDTH * 2;
@@ -32,18 +31,16 @@ pub struct VgaWriter {
     row: usize,
     fg: VgaColor,
     bg: VgaColor,
-    buffer: *mut u8,
 }
 
 #[allow(dead_code)]
 impl VgaWriter {
-    pub fn new() -> Self {
+    pub const fn new() -> Self {
         Self {
             column: 0,
             row: 0,
             fg: VgaColor::White,
             bg: VgaColor::Black,
-            buffer: 0xb8000 as *mut u8,
         }
     }
 
@@ -51,10 +48,6 @@ impl VgaWriter {
         for byte in input.chars() {
             Self::write_byte(self, char_to_u8(byte));
         }
-    }
-
-    pub fn write_startup_message(&mut self) {
-        Self::write(self, STARTUP_MESSAGE);
     }
 
     pub fn write_byte(&mut self, byte: u8) {
@@ -91,8 +84,8 @@ impl VgaWriter {
 
     fn write_to_buffer(&mut self, pos: usize, byte: u8) {
         unsafe {
-            core::ptr::write_volatile(self.buffer.add(pos * 2), byte);
-            core::ptr::write_volatile(self.buffer.add(pos * 2 + 1), self.get_color());
+            core::ptr::write_volatile(VGA_BUFFER.add(pos * 2), byte);
+            core::ptr::write_volatile(VGA_BUFFER.add(pos * 2 + 1), self.get_color());
         }
     }
 
@@ -112,8 +105,8 @@ impl VgaWriter {
         for i in 0..LAST_ROW_BYTE_OFFSET {
             unsafe {
                 core::ptr::write_volatile(
-                    self.buffer.add(i),
-                    core::ptr::read_volatile(self.buffer.add(VGA_WIDTH * 2 + i)),
+                    VGA_BUFFER.add(i),
+                    core::ptr::read_volatile(VGA_BUFFER.add(VGA_WIDTH * 2 + i)),
                 );
             }
         }
