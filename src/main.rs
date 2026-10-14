@@ -2,6 +2,7 @@
 #![no_main] // disable Rust-level entry points
 
 mod console;
+mod diagnostics;
 mod sync;
 
 use core::panic::PanicInfo;
@@ -17,6 +18,7 @@ pub extern "C" fn _start() -> ! {
 
 /// This is the function that gets called on panic
 #[panic_handler]
-fn panic(_info: &PanicInfo) -> ! {
+fn panic(info: &PanicInfo) -> ! {
+    diagnostics::panic::report_panic(info);
     loop {}
 }
