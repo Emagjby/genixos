@@ -13,10 +13,6 @@ pub extern "C" fn _start() -> ! {
     // loads a function called _start by default
     println!("Loading GenixOS...");
 
-    cprint!(Red, Blue; "{}", "test");
-    cprintln!(Green; "{}", "hi!");
-    cprintln!(Yellow; "[WARN: {}]", "Test");
-
     loop {}
 }
 
