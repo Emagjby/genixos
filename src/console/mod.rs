@@ -40,6 +40,12 @@ pub fn set_cursor(x: usize, y: usize) {
     guard.set_cursor(x, y);
 }
 
+pub fn try_with_console(f: impl FnOnce(&mut VgaWriter)) -> Option<()> {
+    let mut guard = CONSOLE.writer.try_lock()?;
+    f(&mut guard);
+    Some(())
+}
+
 pub fn _print(args: core::fmt::Arguments) {
     let mut guard = CONSOLE.writer.lock();
     guard.write_fmt(args);
