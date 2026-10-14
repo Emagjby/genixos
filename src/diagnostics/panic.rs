@@ -23,6 +23,6 @@ SYSTEM HALTED
     console::try_with_console(|vga_writer| {
         vga_writer.clear();
         vga_writer.set_color(VgaColor::Black, VgaColor::Red);
-        vga_writer.write_fmt(args);
+        let _ = vga_writer.write_fmt(args);
     });
 }
