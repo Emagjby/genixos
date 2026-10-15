@@ -1,8 +1,10 @@
 #![no_std] // don't link the rust standard library
 #![no_main] // disable Rust-level entry points
 
+mod arch;
 mod console;
 mod diagnostics;
+mod drivers;
 mod sync;
 
 use core::panic::PanicInfo;
@@ -11,7 +13,12 @@ use core::panic::PanicInfo;
 pub extern "C" fn _start() -> ! {
     // This is our entry point, beacuse the linker
     // loads a function called _start by default
+    drivers::init();
+
     println!("Loading GenixOS...");
+
+    cprintln!(Red; "Hi!");
+    cprintln!(Red, Green; "Hi!");
 
     loop {}
 }
