@@ -17,9 +17,6 @@ pub extern "C" fn _start() -> ! {
 
     println!("Loading GenixOS...");
 
-    cprintln!(Red; "Hi!");
-    cprintln!(Red, Green; "Hi!");
-
     loop {}
 }
 

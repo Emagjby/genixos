@@ -44,13 +44,15 @@ impl VgaWriter {
         }
     }
 
-    pub fn write(&mut self, input: &str) {
+    pub fn write(&mut self, input: &str) -> Result<(), ()> {
         for byte in input.chars() {
-            Self::write_byte(self, char_to_u8(byte));
+            Self::write_byte(self, char_to_u8(byte))?;
         }
+
+        Ok(())
     }
 
-    pub fn write_byte(&mut self, byte: u8) {
+    pub fn write_byte(&mut self, byte: u8) -> Result<(), ()> {
         match byte {
             b'\n' => self.newline(),
             0x20..=0x7E => {
@@ -69,13 +71,14 @@ impl VgaWriter {
         self.fg = fg;
     }
 
-    pub fn set_cursor(&mut self, x: usize, y: usize) {
+    pub fn set_cursor(&mut self, x: usize, y: usize) -> Result<(), ()> {
         if x >= VGA_WIDTH || y >= VGA_HEIGHT {
-            return; // TODO: error
+            return Err(());
         }
 
         self.column = x;
         self.row = y;
+        Ok(())
     }
 
     fn get_color(&self) -> u8 {
@@ -93,15 +96,17 @@ impl VgaWriter {
         self.column + self.row * VGA_WIDTH
     }
 
-    fn iterate_pos(&mut self) {
+    fn iterate_pos(&mut self) -> Result<(), ()> {
         self.column += 1;
 
         if self.column >= VGA_WIDTH {
-            self.newline();
+            self.newline()?;
         }
+
+        Ok(())
     }
 
-    fn scroll(&mut self) {
+    fn scroll(&mut self) -> Result<(), ()> {
         for i in 0..LAST_ROW_BYTE_OFFSET {
             unsafe {
                 core::ptr::write_volatile(
@@ -111,52 +116,61 @@ impl VgaWriter {
             }
         }
 
-        self.clear_row(VGA_HEIGHT - 1);
+        self.clear_row(VGA_HEIGHT - 1)?;
 
         self.column = 0;
         self.row -= 1;
+
+        Ok(())
     }
 
-    fn newline(&mut self) {
+    fn newline(&mut self) -> Result<(), ()> {
         self.column = 0;
         self.row += 1;
 
         if self.row >= VGA_HEIGHT {
-            self.scroll();
+            self.scroll()?;
         }
+
+        Ok(())
     }
 
-    pub fn clear(&mut self) {
+    pub fn clear(&mut self) -> Result<(), ()> {
         for i in 0..VGA_HEIGHT {
-            self.clear_row(i);
+            self.clear_row(i)?;
         }
 
-        self.set_cursor(0, 0);
+        self.set_cursor(0, 0)?;
+
+        Ok(())
     }
 
-    pub fn clear_row(&mut self, row: usize) {
+    pub fn clear_row(&mut self, row: usize) -> Result<(), ()> {
         if row >= VGA_HEIGHT {
-            return; // TODO: error
+            return Err(());
         }
 
         for i in 0..VGA_WIDTH {
-            self.clear_point(row * VGA_WIDTH + i);
+            self.clear_point(row * VGA_WIDTH + i)?;
         }
+
+        Ok(())
     }
 
-    pub fn clear_point(&mut self, pos: usize) {
+    pub fn clear_point(&mut self, pos: usize) -> Result<(), ()> {
         if pos >= VGA_WIDTH * VGA_HEIGHT {
-            return; // TODO: error
+            return Err(());
         }
 
         self.write_to_buffer(pos, b' ');
+
+        Ok(())
     }
 }
 
 impl core::fmt::Write for VgaWriter {
     fn write_str(&mut self, s: &str) -> core::fmt::Result {
-        self.write(s);
-        Ok(())
+        self.write(s).map_err(|_| core::fmt::Error)
     }
 }
 

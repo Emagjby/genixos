@@ -33,12 +33,20 @@ pub fn _reset_color() {
 
 pub fn clear() {
     let mut guard = CONSOLE.writer.lock();
-    guard.clear();
+    let res = guard.clear();
+    if res.is_err() {
+        drop(guard);
+        crate::warn!("Unexpected error occured. Couldn't clear.");
+    }
 }
 
 pub fn set_cursor(x: usize, y: usize) {
     let mut guard = CONSOLE.writer.lock();
-    guard.set_cursor(x, y);
+    let res = guard.set_cursor(x, y);
+    if res.is_err() {
+        drop(guard);
+        crate::warn!("Cursor position out of bounds. Operation not applied.");
+    }
 }
 
 pub fn with_console(f: impl FnOnce(&mut VgaWriter)) {
