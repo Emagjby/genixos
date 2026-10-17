@@ -83,3 +83,20 @@ Currently, the kernel:
 
 There is currently no memory allocator, process scheduler,
 filesystem, or interactive shell.
+
+## Kernel Safety Assumptions
+
+Genix OS currently targets x86_64 under QEMU.
+
+The bootloader establishes the initial memory mappings, page tables,
+and kernel stack before transferring control to the kernel.
+
+The VGA driver assumes that virtual address 0xB8000 maps to accessible
+VGA text memory.
+
+Hardware I/O is encapsulated in architecture-specific functions and
+device drivers. Global console and serial state is protected by spinlocks.
+
+Spinlocks are non-reentrant and currently do not disable interrupts.
+Interrupt safety and multicore sync require further review as the
+kernel evolves.

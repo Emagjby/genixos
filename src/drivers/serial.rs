@@ -14,6 +14,11 @@ impl SerialPort {
     }
 
     pub fn init(&self) {
+        // SAFETY:
+        // base_port must identify an accessible 16550-compatible UART.
+        // The register offsets and intialization sequence follow the
+        // UART's hardware interface. Initialization must not race with
+        // other accesses to the same device.
         unsafe {
             // disable interrupts
             port::write_u8(self.base_port + 1, 0x00);
@@ -33,6 +38,12 @@ impl SerialPort {
     }
 
     pub fn write_byte(&self, byte: u8) {
+        // SAFETY:
+        // The UART must be initialized and accessible.
+        // Register offset +5 contains the line status register.
+        // Bit 5 indicates transmitter readiness.
+        // The transmit register is accessed at offset +0 with DLAB cleared.
+        // Accesses must be synchronized with other users of this UART.
         unsafe {
             loop {
                 if (port::read_u8(self.base_port + 5) & 0x20) != 0 {

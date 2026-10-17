@@ -1,3 +1,6 @@
+// SAFETY:
+// The bootloader must map virtual adress 0xB8000 to VGA text memory
+// with write permissions. Genix currently relies on this mapping
 const VGA_BUFFER: *mut u8 = 0xb8000 as *mut u8;
 const VGA_WIDTH: usize = 80;
 const VGA_HEIGHT: usize = 25;
@@ -86,6 +89,11 @@ impl VgaWriter {
     }
 
     fn write_to_buffer(&mut self, pos: usize, byte: u8) {
+        // SAFETY:
+        // The caller must ensure pos < VGA_WIDTH * VGA_HEIGHT.
+        // Each VGA cell occupies two bytes, so both writes must remain within
+        // the mapped VGA text buffer. The caller must also ensure that
+        // accesses are synchronized.
         unsafe {
             core::ptr::write_volatile(VGA_BUFFER.add(pos * 2), byte);
             core::ptr::write_volatile(VGA_BUFFER.add(pos * 2 + 1), self.get_color());
@@ -108,6 +116,11 @@ impl VgaWriter {
 
     fn scroll(&mut self) -> Result<(), ()> {
         for i in 0..LAST_ROW_BYTE_OFFSET {
+            // SAFETY:
+            // Source and destination offsets remain within the 80x25 VGA buffer.
+            // The forward copy direction is safe for shifting rows upward.
+            // Volatile operations preserve the required device-memory accesses.
+            // Exclusive access must be guaranteed by the caller.
             unsafe {
                 core::ptr::write_volatile(
                     VGA_BUFFER.add(i),
