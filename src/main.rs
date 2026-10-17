@@ -1,5 +1,6 @@
 #![no_std] // don't link the rust standard library
 #![no_main] // disable Rust-level entry points
+#![feature(abi_x86_interrupt)]
 
 mod arch;
 mod console;
@@ -16,6 +17,7 @@ pub extern "C" fn _start(boot_info: &'static BootInfo) -> ! {
     // This is our entry point, beacuse the linker
     // loads a function called _start by default
     drivers::init();
+    arch::x86_64::interrupts::load();
     memory::inspect(boot_info);
 
     console::clear();
