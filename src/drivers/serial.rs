@@ -68,6 +68,12 @@ pub fn with_serial1(f: impl FnOnce(&mut SerialPort)) {
     f(&mut guard);
 }
 
+pub fn try_with_serial1(f: impl FnOnce(&mut SerialPort)) -> Option<()> {
+    let mut guard = SERIAL1.try_lock()?;
+    f(&mut guard);
+    Some(())
+}
+
 #[macro_export]
 macro_rules! serialprint {
     ($($arg:tt)*) => {{

@@ -11,3 +11,16 @@ pub struct InterruptStackFrame {
 pub extern "x86-interrupt" fn breakpoint_handler(_frame: InterruptStackFrame) {
     crate::debug!("Breakpoint: vector 3 triggered\n");
 }
+
+pub extern "x86-interrupt" fn double_fault_handler(
+    frame: InterruptStackFrame,
+    error_code: u64,
+) -> ! {
+    use crate::drivers::serial::try_with_serial1;
+    use core::fmt::Write;
+
+    try_with_serial1(|s| {
+        let _ = s.write_fmt(format_args!("{:?}\n{:?}", frame, error_code));
+    });
+    panic!("{:?}\n{:?}", frame, error_code)
+}

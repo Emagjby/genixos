@@ -28,6 +28,11 @@ impl InterruptDescriptorTable {
         self.entries[vector].ist = 0;
     }
 
+    pub fn set_ist(&mut self, vector: usize, ist_idx: u8) {
+        assert!(ist_idx <= 7, "IST index must be 0–7");
+        self.entries[vector].ist = ist_idx;
+    }
+
     pub fn load(&'static self) {
         let pointer = IdtPointer {
             limit: (size_of::<[IdtEntry; 256]>() - 1) as u16,
