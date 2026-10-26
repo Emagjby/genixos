@@ -41,3 +41,9 @@ pub unsafe fn write_u8(port: u16, value: u8) {
         );
     }
 }
+
+pub unsafe fn io_wait() {
+    unsafe {
+        write_u8(0x80, 0);
+    }
+}

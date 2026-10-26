@@ -1,11 +1,15 @@
+pub mod cpu;
 pub mod gdt;
 pub mod handlers;
 pub mod idt;
+pub mod pic;
 pub mod tss;
 
 use crate::arch::x86_64::interrupts::{
+    cpu::disable_interrupts,
     gdt::GlobalDescriptorTable,
     idt::InterruptDescriptorTable,
+    pic::ChainedPics,
     tss::{DoubleFaultStack, TaskStateSegment},
 };
 use core::cell::UnsafeCell;
@@ -16,11 +20,37 @@ static IDT_STORAGE: IdtStorage = IdtStorage::new();
 static GDT_STORAGE: GdtStorage = GdtStorage::new();
 static TSS_STORAGE: TssStorage = TssStorage::new();
 
+static PIC_STORAGE: PicStorage = PicStorage::new();
+
 pub fn load() {
     unsafe {
+        disable_interrupts();
         TSS_STORAGE.initialize();
         GDT_STORAGE.initialize();
         IDT_STORAGE.initialize();
+        PIC_STORAGE.initialize();
+    }
+}
+
+pub struct PicStorage {
+    pic: UnsafeCell<ChainedPics>,
+}
+
+impl PicStorage {
+    pub const fn new() -> Self {
+        Self {
+            pic: UnsafeCell::new(ChainedPics::new()),
+        }
+    }
+
+    pub unsafe fn initialize(&self) {
+        unsafe {
+            let pic_pointer = self.pic.get();
+
+            let pic = &mut *pic_pointer;
+
+            pic.initialize();
+        }
     }
 }
 
@@ -139,3 +169,5 @@ unsafe impl Sync for GdtStorage {}
 unsafe impl Sync for TssStorage {}
 
 unsafe impl Sync for DfsStorage {}
+
+unsafe impl Sync for PicStorage {}
