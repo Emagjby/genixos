@@ -23,10 +23,6 @@ pub extern "C" fn _start(boot_info: &'static BootInfo) -> ! {
     console::clear();
     println!("Loading GenixOS...");
 
-    unsafe {
-        core::arch::asm!("int3");
-    }
-
     loop {}
 }
 

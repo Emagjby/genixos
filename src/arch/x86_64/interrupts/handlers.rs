@@ -1,3 +1,5 @@
+use crate::arch::x86_64::interrupts;
+
 #[repr(C)]
 #[derive(Debug)]
 pub struct InterruptStackFrame {
@@ -23,4 +25,9 @@ pub extern "x86-interrupt" fn double_fault_handler(
         let _ = s.write_fmt(format_args!("{:?}\n{:?}", frame, error_code));
     });
     panic!("{:?}\n{:?}", frame, error_code)
+}
+
+pub extern "x86-interrupt" fn timer_interrupt_handler(_frame: InterruptStackFrame) {
+    interrupts::tick_increment();
+    interrupts::pic_send_eoi(0);
 }

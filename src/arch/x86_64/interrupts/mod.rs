@@ -3,13 +3,17 @@ pub mod gdt;
 pub mod handlers;
 pub mod idt;
 pub mod pic;
+pub mod pit;
+pub mod ticks;
 pub mod tss;
 
 use crate::arch::x86_64::interrupts::{
-    cpu::disable_interrupts,
+    cpu::{disable_interrupts, enable_interrupts},
     gdt::GlobalDescriptorTable,
     idt::InterruptDescriptorTable,
     pic::ChainedPics,
+    pit::Pit,
+    ticks::Counter,
     tss::{DoubleFaultStack, TaskStateSegment},
 };
 use core::cell::UnsafeCell;
@@ -21,6 +25,9 @@ static GDT_STORAGE: GdtStorage = GdtStorage::new();
 static TSS_STORAGE: TssStorage = TssStorage::new();
 
 static PIC_STORAGE: PicStorage = PicStorage::new();
+static PIT_STORAGE: PitStorage = PitStorage::new();
+
+static TICK_COUNTER: Counter = Counter::new();
 
 pub fn load() {
     unsafe {
@@ -29,6 +36,31 @@ pub fn load() {
         GDT_STORAGE.initialize();
         IDT_STORAGE.initialize();
         PIC_STORAGE.initialize();
+        PIT_STORAGE.initialize();
+        PIC_STORAGE.unmask_irq(0);
+        enable_interrupts();
+    }
+}
+
+pub struct PitStorage {
+    pit: UnsafeCell<Pit>,
+}
+
+impl PitStorage {
+    pub const fn new() -> Self {
+        Self {
+            pit: UnsafeCell::new(Pit::new()),
+        }
+    }
+
+    pub unsafe fn initialize(&self) {
+        unsafe {
+            let pit_pointer = self.pit.get();
+
+            let pit = &*pit_pointer;
+
+            pit.configure_periodic(100); // Hz
+        }
     }
 }
 
@@ -46,10 +78,27 @@ impl PicStorage {
     pub unsafe fn initialize(&self) {
         unsafe {
             let pic_pointer = self.pic.get();
-
-            let pic = &mut *pic_pointer;
+            let pic = &*pic_pointer;
 
             pic.initialize();
+        }
+    }
+
+    pub fn send_eoi(&self, irq: u8) {
+        unsafe {
+            let pic_pointer = self.pic.get();
+            let pic = &*pic_pointer;
+
+            pic.send_eoi(irq);
+        }
+    }
+
+    pub fn unmask_irq(&self, irq: u8) {
+        unsafe {
+            let pic_pointer = self.pic.get();
+            let pic = &*pic_pointer;
+
+            pic.unmask_irq(irq)
         }
     }
 }
@@ -152,9 +201,23 @@ impl IdtStorage {
             idt.set_handler(8, handlers::double_fault_handler as *const () as u64);
             idt.set_ist(8, 1);
 
+            idt.set_handler(0x20, handlers::timer_interrupt_handler as *const () as u64);
+
             idt.load();
         }
     }
+}
+
+pub fn pic_send_eoi(irq: u8) {
+    PIC_STORAGE.send_eoi(irq);
+}
+
+pub fn tick_increment() {
+    TICK_COUNTER.increment();
+}
+
+pub fn get_current_tick() -> u64 {
+    TICK_COUNTER.read()
 }
 
 // SAFETY:
@@ -171,3 +234,5 @@ unsafe impl Sync for TssStorage {}
 unsafe impl Sync for DfsStorage {}
 
 unsafe impl Sync for PicStorage {}
+
+unsafe impl Sync for PitStorage {}
