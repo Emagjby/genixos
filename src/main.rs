@@ -8,6 +8,7 @@ mod diagnostics;
 mod drivers;
 mod memory;
 mod sync;
+mod time;
 
 use bootloader::BootInfo;
 use core::panic::PanicInfo;
