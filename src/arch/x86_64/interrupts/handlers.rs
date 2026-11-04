@@ -1,4 +1,5 @@
 use crate::arch::x86_64::interrupts;
+use crate::drivers::ps2;
 
 #[repr(C)]
 #[derive(Debug)]
@@ -30,4 +31,9 @@ pub extern "x86-interrupt" fn double_fault_handler(
 pub extern "x86-interrupt" fn timer_interrupt_handler(_frame: InterruptStackFrame) {
     interrupts::tick_increment();
     interrupts::pic_send_eoi(0);
+}
+
+pub extern "x86-interrupt" fn keyboard_interrupt_handler(_frame: InterruptStackFrame) {
+    ps2::receive_input();
+    interrupts::pic_send_eoi(1);
 }

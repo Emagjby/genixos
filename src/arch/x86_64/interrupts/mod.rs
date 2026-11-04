@@ -38,6 +38,7 @@ pub fn load() {
         PIC_STORAGE.initialize();
         PIT_STORAGE.initialize();
         PIC_STORAGE.unmask_irq(0);
+        PIC_STORAGE.unmask_irq(1);
         enable_interrupts();
     }
 }
@@ -202,6 +203,11 @@ impl IdtStorage {
             idt.set_ist(8, 1);
 
             idt.set_handler(0x20, handlers::timer_interrupt_handler as *const () as u64);
+
+            idt.set_handler(
+                0x21,
+                handlers::keyboard_interrupt_handler as *const () as u64,
+            );
 
             idt.load();
         }
